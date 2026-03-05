@@ -29,7 +29,7 @@ typedef struct dataSet {
     int ageCount[AGE_RANGE];  /* count per age 18..30; index 0 = age 18, etc. */
 } DATASET;
 
-/ * createDataSet: Allocate and initialize a new data set that can hold up to maxStudents.
+/* createDataSet: Allocate and initialize a new data set that can hold up to maxStudents.
  * Returns pointer to DATASET, or NULL if allocation fails.
  * Struct and student array allocated once; no realloc. O(1). */
 DATASET *createDataSet(int maxStudents)
@@ -56,7 +56,7 @@ DATASET *createDataSet(int maxStudents)
     return ds;
 }
 
-/ * destroyDataSet: Free all memory used by the data set.
+/* destroyDataSet: Free all memory used by the data set.
  * Must free students[] first, then ds; otherwise the pointer to the array is lost. O(1). */
 void destroyDataSet(DATASET *ds)
 {
@@ -66,7 +66,7 @@ void destroyDataSet(DATASET *ds)
     }
 }
 
-/ * insertion: Add one student (id, age) to the data set.
+/* insertion: Add one student (id, age) to the data set.
  * Append at index count (no shifting), so insertion is O(1).
  * ageCount[age - MIN_AGE] is updated so maxAgeGap can use it later.
  * Sorting by age would make insertion O(n); not needed because search is by linear scan. */
@@ -80,7 +80,7 @@ void insertion(DATASET *ds, int id, int age)
         return;
     }
 
-    ds->students[ds->count].id = id;    /* append at end so no shifting—gives O(1) insertion */
+    ds->students[ds->count].id = id;    /* append at end so no shifting - gives O(1) insertion */
     ds->students[ds->count].age = age; /* same slot holds both fields for this student */
     ds->count++;                       /* one more student; next insertion will use this index */
 
@@ -89,7 +89,7 @@ void insertion(DATASET *ds, int id, int age)
     }
 }
 
-/ * searchAge: Find and print all students with the given age.
+/* searchAge: Find and print all students with the given age.
  * Whole array is scanned because it is unsorted by age. O(n).
  * Spec requires returning multiple records; each match is printed. */
 void searchAge(DATASET *ds, int age)
@@ -104,7 +104,7 @@ void searchAge(DATASET *ds, int age)
         return;
     }
 
-    for (i = 0; i < ds->count; i++) {           /* must check every slot—array is unsorted by age */
+    for (i = 0; i < ds->count; i++) {           /* must check every slot - array is unsorted by age */
         if (ds->students[i].age == age) {        /* match: this student has the requested age */
             printf("searchAge: found student (ID %d, Age %d)\n",
                    ds->students[i].id, ds->students[i].age);
@@ -117,7 +117,7 @@ void searchAge(DATASET *ds, int age)
     }
 }
 
-/ * deletion: Remove ALL students with the given age.
+/* deletion: Remove ALL students with the given age.
  * For each match the slot is overwritten with the last element and count is decremented (no shifting).
  * Index i is not incremented after a delete because the moved element might also have that age. O(n). */
 void deletion(DATASET *ds, int age)
@@ -158,7 +158,7 @@ void deletion(DATASET *ds, int age)
     }
 }
 
-/ * maxAgeGap: Return (max age present) - (min age present).
+/* maxAgeGap: Return (max age present) - (min age present).
  * ageCount[] only: find first and last index with count > 0. O(13) = O(1).
  * Without ageCount the whole array would need to be scanned to find min/max age. */
 int maxAgeGap(DATASET *ds)
