@@ -1,0 +1,18 @@
+# Compiled binaries
+college
+*.o
+*.out
+*.exe
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+*.swp
+*~
+.idea/
+.vscode/
+
+# Tar submission (if you generate locally)
+*.tar
+*.tar.gz

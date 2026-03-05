@@ -1,0 +1,47 @@
+Application 2 Report
+
+Data structure choice:
+- The data set is implemented as a single array of STUDENT structs (ID, Age) that is kept sorted by student ID.
+- This allows efficient searching by ID using binary search, which is important because searches are frequent.
+- The maximum number of students (3000) is known in advance, so a fixed-size array is appropriate and simple.
+
+Worst-case time complexity (n = number of students):
+
+- createDataSet:
+  - Allocates the main array and initializes counters.
+  - Worst-case: O(1)
+
+- destroyDataSet:
+  - Frees the array and the DATASET structure.
+  - Worst-case: O(1)
+
+- insertion:
+  - Maintains the array sorted by ID.
+  - In the worst case, the new ID is smaller than all existing IDs, so every element must be shifted one position to the right.
+  - Worst-case: O(n)
+
+- searchID:
+  - Uses binary search on the sorted ID array.
+  - Each step cuts the search interval in half.
+  - Worst-case: O(log n)
+
+- deletion:
+  - First uses binary search to find the ID (O(log n)).
+  - Then shifts all later elements left by one position (O(n)).
+  - Overall worst-case: O(log n + n) = O(n)
+
+Justification and alternatives:
+
+- Sorted array by ID:
+  - Very simple to implement.
+  - Gives fast O(log n) search, which is good because searches are frequent.
+  - Insertion and deletion are more expensive (O(n)), but insertions and deletions are not frequent in this application.
+- Hash table keyed by ID:
+  - Could give O(1) average-time search, insertion, and deletion.
+  - However, it is more complex to implement correctly (hash function, collision resolution, rehashing).
+  - For a maximum of only 3000 students, O(log n) with a simple sorted array is good enough and easier to code.
+- Linked list:
+  - Even if sorted, searching would be O(n), which is worse than the O(log n) from the sorted array.
+  - Therefore, it would not be a good choice for this application where many searches are performed.
+- The sorted array of structs is therefore an appropriate and simple choice for optimizing ID-based search in Application 2.
+
