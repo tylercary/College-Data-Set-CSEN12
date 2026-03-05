@@ -1,4 +1,7 @@
-/* college.c - Application 2 (search by ID) */
+/* college.c - Application 2 (search by ID)
+ * Driver: create data set, insert 1000 random students (array stays sorted by ID),
+ * one search by ID, one deletion by ID, then destroy. Per assignment spec.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +15,7 @@ void insertion(DATASET *ds, int id, int age);
 void searchID(DATASET *ds, int id);
 void deletion(DATASET *ds, int id);
 
-/* returns 1 or 2 randomly */
+/* Spec: random 1 or 2 for building unique increasing IDs. */
 int randomOneOrTwo(void)
 {
     return (rand() % 2) + 1;
@@ -26,7 +29,7 @@ int main(void)
     int currentID;
     DATASET *ds;
 
-    srand((unsigned int)time(NULL));  /* different seed each run so test is different each time */
+    srand((unsigned int)time(NULL));
 
     ds = createDataSet(maxStudents);
     if (ds == NULL) {
@@ -34,28 +37,28 @@ int main(void)
         return 1;
     }
 
-    currentID = randomOneOrTwo();      /* first ID 1 or 2 per spec */
+    /* Same ID rule as App1: first 1 or 2, then prev + 1 or 2. insertion() keeps array sorted by ID. */
+    currentID = randomOneOrTwo();
     for (i = 0; i < numberOfStudents; i++) {
-        int age = (rand() % 13) + 18; /* 18..30 per spec */
+        int age = (rand() % 13) + 18;
         insertion(ds, currentID, age);
-        currentID += randomOneOrTwo(); /* next ID = prev + 1 or 2 so IDs stay unique; insertion keeps array sorted */
+        currentID += randomOneOrTwo();
     }
 
+    /* Spec: randomly generate ID (1..2000) and search by ID. App2 only searches by ID. */
     {
-        int randomID = (rand() % 2000) + 1;   /* 1..2000; App2 searches by ID */
+        int randomID = (rand() % 2000) + 1;
         int randomAge = (rand() % 13) + 18;
-
         (void)randomAge;
-
-        searchID(ds, randomID);        /* demo search by ID as required */
+        searchID(ds, randomID);
     }
 
+    /* Spec (App2): randomly generate ID; delete that one record if found. */
     {
-        int idToDelete = (rand() % 2000) + 1; /* pick random ID; delete that one record if present (App2 rule) */
+        int idToDelete = (rand() % 2000) + 1;
         deletion(ds, idToDelete);
     }
 
-    destroyDataSet(ds);   /* free all memory */
-
+    destroyDataSet(ds);
     return 0;
 }

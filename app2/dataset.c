@@ -1,22 +1,28 @@
 /* dataset.c - Application 2 (search by ID)
- * Data structure: array sorted by ID (binary search).
- * O(1): create, destroy. O(log n): searchID. O(n): insertion, deletion.
+ * Data structure: array kept SORTED by student ID so binary search can be used for searchID.
+ * O(1): create, destroy. O(log n): searchID. O(n): insertion, deletion (shift to keep sorted).
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
+/* One student record: ID and Age. Same as App1. */
 typedef struct student {
     int id;
     int age;
 } STUDENT;
 
+/* Data set ADT for App2:
+ * students[] is always sorted by id. That allows binary search for searchID in O(log n).
+ * Insertion and deletion do shifting to maintain sorted order.
+ */
 typedef struct dataSet {
-    int count;         /* how many students in array */
-    int capacity;      /* max allowed so we know when full */
-    STUDENT *students; /* kept sorted by id so we can binary search by ID */
+    int count;         /* current number of students */
+    int capacity;      /* max allowed */
+    STUDENT *students; /* always sorted by id (ascending) */
 } DATASET;
 
+/* createDataSet: Allocate struct and array for up to maxStudents. O(1). */
 DATASET *createDataSet(int maxStudents)
 {
     DATASET *ds = (DATASET *)malloc(sizeof(DATASET));  /* allocate struct so caller gets a handle */
@@ -29,21 +35,25 @@ DATASET *createDataSet(int maxStudents)
 
     ds->students = (STUDENT *)malloc(sizeof(STUDENT) * maxStudents);  /* array for up to maxStudents records */
     if (ds->students == NULL) {
-        free(ds);   /* avoid leak: we already allocated ds */
+        free(ds);   /* avoid leak: ds was already allocated */
         return NULL;
     }
 
     return ds;
 }
 
+/* destroyDataSet: Free array then struct. Same as App1. O(1). */
 void destroyDataSet(DATASET *ds)
 {
     if (ds != NULL) {
-        free(ds->students);   /* free array first; after free(ds) we can't access ds->students */
+        free(ds->students);   /* free array first; after free(ds) the pointer to the array is lost */
         free(ds);
     }
 }
 
+/* insertion: Add (id, age) and keep array sorted by id.
+ * Find position by scanning from the end: shift every element with id > new id one slot right, then insert.
+ * O(n) but insertion is rare in App2; design optimizes for searchID which is frequent. */
 void insertion(DATASET *ds, int id, int age)
 {
     int i;
@@ -56,17 +66,19 @@ void insertion(DATASET *ds, int id, int age)
         return;
     }
 
-    i = ds->count - 1;                 /* start at last element to find insert position */
-    while (i >= 0 && ds->students[i].id > id) {  /* shift right to make room; keep array sorted by id */
-        ds->students[i + 1] = ds->students[i];
+    i = ds->count - 1;                 /* start at last element */
+    while (i >= 0 && ds->students[i].id > id) {  /* shift right until the position where new id fits is found */
+        ds->students[i + 1] = ds->students[i];  /* move element right to make a gap */
         i--;
     }
-
-    ds->students[i + 1].id = id;       /* insert in the gap we made so order is preserved */
+    /* after loop: students[i].id <= id (or i is -1), so insert at i+1 */
+    ds->students[i + 1].id = id;
     ds->students[i + 1].age = age;
     ds->count++;
 }
 
+/* searchID: Find student with given id using binary search. O(log n).
+ * Compare with middle element; if id < mid search left half, else right half. Repeat until found or range empty. */
 void searchID(DATASET *ds, int id)
 {
     int low = 0;
@@ -82,8 +94,8 @@ void searchID(DATASET *ds, int id)
 
     high = ds->count - 1;
 
-    while (low <= high) {                          /* binary search: only works because array is sorted by id */
-        int mid = (low + high) / 2;                 /* check middle */
+    while (low <= high) {                          /* binary search: narrow range until found or empty */
+        int mid = (low + high) / 2;                 /* check middle index */
         int midID = ds->students[mid].id;
 
         if (midID == id) {
@@ -92,9 +104,9 @@ void searchID(DATASET *ds, int id)
             found = 1;
             break;
         } else if (midID < id) {
-            low = mid + 1;                          /* id is in right half, so search there */
+            low = mid + 1;                          /* target id is larger, so it's in the right half */
         } else {
-            high = mid - 1;                         /* id is in left half */
+            high = mid - 1;                         /* target id is smaller, so it's in the left half */
         }
     }
 
@@ -103,6 +115,9 @@ void searchID(DATASET *ds, int id)
     }
 }
 
+/* deletion: Remove the one student with the given id (if present).
+ * Binary search to find index, then shift all elements after it left by one. O(log n) + O(n) = O(n).
+ * Index is needed to know where to shift from; same binary search as searchID but stores the index. */
 void deletion(DATASET *ds, int id)
 {
     int low = 0;
@@ -123,7 +138,7 @@ void deletion(DATASET *ds, int id)
         int midID = ds->students[mid].id;
 
         if (midID == id) {
-            index = mid;                            /* need index so we can shift from here */
+            index = mid;                            /* index needed so the shift loop knows where to start */
             break;
         } else if (midID < id) {
             low = mid + 1;
@@ -141,10 +156,10 @@ void deletion(DATASET *ds, int id)
            ds->students[index].id, ds->students[index].age);
 
     for (i = index; i < ds->count - 1; i++) {
-        ds->students[i] = ds->students[i + 1];    /* shift left to close the gap and keep array sorted */
+        ds->students[i] = ds->students[i + 1];    /* shift left: each element takes the place of the next */
     }
-
-    ds->count--;                                   /* logical size decreases */
+    /* after loop: the slot at index is filled, and the old last slot is duplicate; decrement count to "remove" it */
+    ds->count--;
 
     printf("deletion: student with ID %d has been deleted\n", id);
 }
