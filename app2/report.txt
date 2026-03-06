@@ -7,38 +7,40 @@ Data structure choice:
 - Collision resolution: linear probing. If slot table[i] is occupied, try (i + 1) % m, then (i + 2) % m, etc.
 - An empty slot is marked by id == 0 (valid student IDs are at least 1).
 - Direct addressing means the key (student ID) is used directly in the hash function; no intermediate mapping.
+- A prime table size (3001) helps spread keys more evenly and reduces clustering with linear probing.
+- The table size is larger than the maximum number of students (3000), so the load factor stays below 1 and performance remains good.
 
 Worst-case time complexity (n = number of students, m = table size = 3001):
 
 - createDataSet:
-  - Allocates DATASET and table of size m; loop to mark all slots empty.
-  - Worst-case: O(m). Since m is a fixed constant, this is O(1).
+  - Allocates the DATASET struct and a table array of size m. Then loops through every slot and sets id to 0, marking it as empty.
+  - Worst-case: O(m). Since m is a fixed constant (3001), this is effectively O(1).
 
 - destroyDataSet:
-  - Frees the table and the DATASET structure.
+  - Frees the hash table array first, then frees the DATASET struct itself. Two free() calls total.
   - Worst-case: O(1)
 
 - insertion:
-  - hash(id), then linear probe until empty slot or duplicate id.
-  - Worst-case: O(m) when table is full and all slots are probed. Average-case: O(1).
+  - Computes hash(id) to find the starting slot, then linear probes forward until it finds an empty slot to store the student, or finds a duplicate id (in which case the age is updated).
+  - Worst-case: O(m) when many collisions force probing through most of the table. Average-case: O(1) with a reasonable load factor.
 
 - searchID:
-  - hash(id), then linear probe until found or empty slot.
-  - Worst-case: O(m). Average-case: O(1).
+  - Computes hash(id) to find the starting slot, then linear probes forward. If the matching id is found, it prints the student. If an empty slot is hit first, the student is not in the table.
+  - Worst-case: O(m) if the table is nearly full. Average-case: O(1).
 
 - deletion:
-  - Same as searchID to find slot; then mark slot empty.
+  - Uses the same approach as searchID to locate the student. Once found, it sets the id and age to 0 (marking the slot empty) and decrements the count.
   - Worst-case: O(m). Average-case: O(1).
 
 Justification and alternatives:
 
 - Hash table with direct addressing (h(k) = k % m) and linear probing:
   - Matches the assignment requirement for a prime table length (3001) and linear probing.
-  - Gives O(1) average-time insertion, search, and deletion when load factor is reasonable.
-  - Optimizes for the frequent search-by-ID operations in Application 2.
+  - Gives O(1) average-time insertion, search, and deletion when the load factor is reasonable (here at most 3000/3001, just under 1).
+  - Optimizes for the frequent search-by-ID operations in Application 2, since looking up a student by ID only requires computing the hash and checking a few slots on average.
 - Sorted array with binary search:
-  - Would give O(log n) search but O(n) insertion and deletion; since searches are frequent, hash table gives better average performance.
+  - Would give O(log n) search but O(n) insertion and deletion due to shifting elements. Since Application 2 focuses on fast search by ID, the hash table's O(1) average search is a better fit.
 - Linked list:
-  - Would give O(n) search, which is worse than O(1) average with a hash table.
+  - Would require O(n) linear scan to search by ID, which is much slower than the O(1) average lookup a hash table provides.
 
 The hash table with direct addressing and linear probing is an appropriate choice for Application 2 where searches by ID are frequent and the maximum number of students is known.

@@ -13,39 +13,40 @@ Data structure choice:
 Worst-case time complexity (n = number of students, A = 13 possible ages):
 
 - createDataSet:
-  - Allocates the main array and initializes ageCount to zero (loop over A = 13).
-  - Worst-case: O(1)
+  - Allocates the DATASET struct and a fixed-size array of STUDENT structs. Then initializes the ageCount array (size 13) to all zeros so no ages are counted yet.
+  - Worst-case: O(1) since the ageCount loop is over a small constant (13).
 
 - destroyDataSet:
-  - Frees the array and the DATASET structure.
+  - Frees the student array and then frees the DATASET struct itself. Two free() calls total.
   - Worst-case: O(1)
 
 - insertion:
-  - Appends at end of array and increments ageCount[age - MIN_AGE]. No shifting.
+  - Places the new student at the end of the array (at index count), so no shifting is needed. Also increments ageCount[age - 18] to keep track of how many students have that age.
   - Worst-case: O(1)
 
 - searchAge:
-  - Linear scan of the entire array; prints every student with the given age.
-  - Worst-case: O(n)
+  - Walks through every student in the array from index 0 to count - 1, checking if each student's age matches. Prints every student that matches the given age.
+  - Worst-case: O(n), since it must check all n students.
 
 - deletion:
-  - Linear scan; for each match, overwrite with last element and decrement count.
-  - Worst-case: O(n)
+  - Scans the array for students matching the given age. When a match is found, it overwrites that student with the last student in the array (swap-with-last), then decrements count. This avoids shifting the entire array. Also decrements ageCount for the deleted age.
+  - Worst-case: O(n), since it may need to scan the entire array.
 
 - maxAgeGap:
-  - Scans ageCount[] (size A = 13) to find smallest and largest age present.
-  - Worst-case: O(A) = O(1)
+  - Loops through the ageCount array (size 13) to find the youngest and oldest ages that have at least one student. The gap is the difference between the oldest and youngest.
+  - Worst-case: O(A) = O(1), since A = 13 is a small constant.
 
 Justification and alternatives:
 
 - Array of structs:
-  - Very easy to implement and understand.
-  - Works well when the maximum size is known and moderate (3000 students).
+  - Very easy to implement and understand. Insertion at the end is O(1) and deletion uses swap-with-last to avoid shifting.
+  - Works well when the maximum size is known in advance (3000 students), so a fixed-size array is sufficient.
+  - Combined with the ageCount[] helper array, maxAgeGap runs in constant time without needing to scan all students.
 - Linked list:
-  - Would give similar O(n) time for searchAge and deletion, but adds pointer overhead and more complex code.
-  - Does not improve the frequent operations in this application.
+  - Would give similar O(n) time for searchAge and deletion, but adds pointer overhead and more complex memory management (malloc/free for each node).
+  - Does not improve performance for the frequent operations in this application.
 - Hash table keyed by age:
-  - The age range is extremely small, so a full hash table is unnecessary.
-  - The simple ageCount[] array already gives O(1) maxAgeGap and helps track ages.
+  - The age range is extremely small (only 13 possible values from 18 to 30), so a full hash table would be unnecessary overhead.
+  - The simple ageCount[] array already provides O(1) maxAgeGap and efficiently tracks how many students have each age.
 - Therefore, a plain array plus the small ageCount[] array is an appropriate and simple choice for Application 1.
 
