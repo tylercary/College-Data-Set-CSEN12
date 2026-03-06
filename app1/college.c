@@ -1,6 +1,6 @@
 /* college.c - Application 1 (search by age)
- * Driver program: creates data set, inserts 1000 random students, runs one search by age,
- * one deletion by age, maxAgeGap, then destroys. All per assignment spec.
+ * Author: Tyler Cary
+ * Driver: creates data set, inserts 1000 random students, search by age, deletion by age, maxAgeGap, destroy. Per spec.
  */
 
 #include <stdio.h>

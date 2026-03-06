@@ -1,6 +1,7 @@
 /* dataset.c - Application 1 (search by age)
+ * Author: Tyler Cary
  * Data structure: unsorted array + ageCount[] for maxAgeGap.
- * O(1): create, destroy, insertion, maxAgeGap. O(n): searchAge, deletion.
+ * Time complexity: create O(1), destroy O(1), insertion O(1), searchAge O(n), deletion O(n), maxAgeGap O(1).
  */
 
 #include <stdio.h>

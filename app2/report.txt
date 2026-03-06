@@ -1,47 +1,44 @@
 Application 2 Report
+Author: Tyler Cary
 
 Data structure choice:
-- The data set is implemented as a single array of STUDENT structs (ID, Age) that is kept sorted by student ID.
-- This allows efficient searching by ID using binary search, which is important because searches are frequent.
-- The maximum number of students (3000) is known in advance, so a fixed-size array is appropriate and simple.
+- The data set is implemented as a hash table with direct addressing.
+- Hash function: h(k) = k % m, where m = TABLE_SIZE (3001, a prime number as required).
+- Collision resolution: linear probing. If slot table[i] is occupied, try (i + 1) % m, then (i + 2) % m, etc.
+- An empty slot is marked by id == 0 (valid student IDs are at least 1).
+- Direct addressing means the key (student ID) is used directly in the hash function; no intermediate mapping.
 
-Worst-case time complexity (n = number of students):
+Worst-case time complexity (n = number of students, m = table size = 3001):
 
 - createDataSet:
-  - Allocates the main array and initializes counters.
-  - Worst-case: O(1)
+  - Allocates DATASET and table of size m; loop to mark all slots empty.
+  - Worst-case: O(m). Since m is a fixed constant, this is O(1).
 
 - destroyDataSet:
-  - Frees the array and the DATASET structure.
+  - Frees the table and the DATASET structure.
   - Worst-case: O(1)
 
 - insertion:
-  - Maintains the array sorted by ID.
-  - In the worst case, the new ID is smaller than all existing IDs, so every element must be shifted one position to the right.
-  - Worst-case: O(n)
+  - hash(id), then linear probe until empty slot or duplicate id.
+  - Worst-case: O(m) when table is full and all slots are probed. Average-case: O(1).
 
 - searchID:
-  - Uses binary search on the sorted ID array.
-  - Each step cuts the search interval in half.
-  - Worst-case: O(log n)
+  - hash(id), then linear probe until found or empty slot.
+  - Worst-case: O(m). Average-case: O(1).
 
 - deletion:
-  - First uses binary search to find the ID (O(log n)).
-  - Then shifts all later elements left by one position (O(n)).
-  - Overall worst-case: O(log n + n) = O(n)
+  - Same as searchID to find slot; then mark slot empty.
+  - Worst-case: O(m). Average-case: O(1).
 
 Justification and alternatives:
 
-- Sorted array by ID:
-  - Very simple to implement.
-  - Gives fast O(log n) search, which is good because searches are frequent.
-  - Insertion and deletion are more expensive (O(n)), but insertions and deletions are not frequent in this application.
-- Hash table keyed by ID:
-  - Could give O(1) average-time search, insertion, and deletion.
-  - However, it is more complex to implement correctly (hash function, collision resolution, rehashing).
-  - For a maximum of only 3000 students, O(log n) with a simple sorted array is good enough and easier to code.
+- Hash table with direct addressing (h(k) = k % m) and linear probing:
+  - Matches the assignment requirement for a prime table length (3001) and linear probing.
+  - Gives O(1) average-time insertion, search, and deletion when load factor is reasonable.
+  - Optimizes for the frequent search-by-ID operations in Application 2.
+- Sorted array with binary search:
+  - Would give O(log n) search but O(n) insertion and deletion; since searches are frequent, hash table gives better average performance.
 - Linked list:
-  - Even if sorted, searching would be O(n), which is worse than the O(log n) from the sorted array.
-  - Therefore, it would not be a good choice for this application where many searches are performed.
-- The sorted array of structs is therefore an appropriate and simple choice for optimizing ID-based search in Application 2.
+  - Would give O(n) search, which is worse than O(1) average with a hash table.
 
+The hash table with direct addressing and linear probing is an appropriate choice for Application 2 where searches by ID are frequent and the maximum number of students is known.

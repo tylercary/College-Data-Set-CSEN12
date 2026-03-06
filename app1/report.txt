@@ -1,4 +1,5 @@
 Application 1 Report
+Author: Tyler Cary
 
 Data structure choice:
 - The data set is implemented as:
@@ -12,7 +13,7 @@ Data structure choice:
 Worst-case time complexity (n = number of students, A = 13 possible ages):
 
 - createDataSet:
-  - Allocates the main array and initializes counters.
+  - Allocates the main array and initializes ageCount to zero (loop over A = 13).
   - Worst-case: O(1)
 
 - destroyDataSet:
@@ -20,22 +21,19 @@ Worst-case time complexity (n = number of students, A = 13 possible ages):
   - Worst-case: O(1)
 
 - insertion:
-  - Adds the new student at the end of the array and updates ageCount.
-  - No shifting is required because we do not keep the array sorted.
+  - Appends at end of array and increments ageCount[age - MIN_AGE]. No shifting.
   - Worst-case: O(1)
 
 - searchAge:
-  - Scans the entire array and prints all students with the given age.
+  - Linear scan of the entire array; prints every student with the given age.
   - Worst-case: O(n)
 
 - deletion:
-  - Scans the array and deletes all students with the given age by moving the last element into the deleted slot.
-  - Each student is examined at most once.
+  - Linear scan; for each match, overwrite with last element and decrement count.
   - Worst-case: O(n)
 
 - maxAgeGap:
-  - Uses ageCount[] to find the minimum and maximum ages that appear at least once.
-  - Only scans the fixed age range from 18 to 30 (13 entries).
+  - Scans ageCount[] (size A = 13) to find smallest and largest age present.
   - Worst-case: O(A) = O(1)
 
 Justification and alternatives:

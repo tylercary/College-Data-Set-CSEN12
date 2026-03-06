@@ -1,31 +1,37 @@
 /* dataset.c - Application 2 (search by ID)
- * Data structure: array kept SORTED by student ID so binary search can be used for searchID.
- * O(1): create, destroy. O(log n): searchID. O(n): insertion, deletion (shift to keep sorted).
+ * Author: Tyler Cary
+ * Data structure: hash table with direct addressing. h(k) = k % TABLE_SIZE. Linear probing.
+ * Time complexity: create O(1), destroy O(1); insertion, searchID, deletion: O(1) average, O(m) worst-case (m = table size).
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-/* One student record: ID and Age. Same as App1. */
+/* One student record: ID and Age. */
 typedef struct student {
     int id;
     int age;
 } STUDENT;
 
-/* Data set ADT for App2:
- * students[] is always sorted by id. That allows binary search for searchID in O(log n).
- * Insertion and deletion do shifting to maintain sorted order.
+/* Table size must be prime. 3001 is prime and >= max students (3000). */
+#define TABLE_SIZE 3001
+
+/* Data set ADT for App2: hash table with direct addressing.
+ * table[i] holds a student; id == 0 means the slot is empty.
+ * count = number of students currently in the table.
  */
 typedef struct dataSet {
-    int count;         /* current number of students */
-    int capacity;      /* max allowed */
-    STUDENT *students; /* always sorted by id (ascending) */
+    int count;              /* current number of students */
+    int capacity;           /* max students allowed */
+    STUDENT *table;         /* hash table: table[index].id is 0 if empty */
 } DATASET;
 
-/* createDataSet: Allocate struct and array for up to maxStudents. O(1). */
+/* createDataSet: Allocate struct and hash table of size TABLE_SIZE. O(1). */
 DATASET *createDataSet(int maxStudents)
 {
-    DATASET *ds = (DATASET *)malloc(sizeof(DATASET));  /* allocate struct so caller gets a handle */
+    int i;
+
+    DATASET *ds = (DATASET *)malloc(sizeof(DATASET));
     if (ds == NULL) {
         return NULL;
     }
@@ -33,57 +39,86 @@ DATASET *createDataSet(int maxStudents)
     ds->count = 0;
     ds->capacity = maxStudents;
 
-    ds->students = (STUDENT *)malloc(sizeof(STUDENT) * maxStudents);  /* array for up to maxStudents records */
-    if (ds->students == NULL) {
-        free(ds);   /* avoid leak: ds was already allocated */
+    ds->table = (STUDENT *)malloc(sizeof(STUDENT) * TABLE_SIZE);
+    if (ds->table == NULL) {
+        free(ds);
         return NULL;
+    }
+
+    /* Mark all slots empty (id = 0). */
+    for (i = 0; i < TABLE_SIZE; i++) {
+        ds->table[i].id = 0;
+        ds->table[i].age = 0;
     }
 
     return ds;
 }
 
-/* destroyDataSet: Free array then struct. Same as App1. O(1). */
+/* destroyDataSet: Free table then struct. O(1). */
 void destroyDataSet(DATASET *ds)
 {
     if (ds != NULL) {
-        free(ds->students);   /* free array first; after free(ds) the pointer to the array is lost */
+        free(ds->table);
         free(ds);
     }
 }
 
-/* insertion: Add (id, age) and keep array sorted by id.
- * Find position by scanning from the end: shift every element with id > new id one slot right, then insert.
- * O(n) but insertion is rare in App2; design optimizes for searchID which is frequent. */
+/* Hash function: direct addressing. h(k) = k % TABLE_SIZE. */
+static int hash(int id)
+{
+    int h = id % TABLE_SIZE;
+    if (h < 0) {
+        h += TABLE_SIZE;
+    }
+    return h;
+}
+
+/* insertion: Add (id, age) to the hash table. Linear probing if collision. O(1) average. */
 void insertion(DATASET *ds, int id, int age)
 {
     int i;
+    int start;
 
     if (ds == NULL) {
         return;
     }
 
-    if (ds->count >= ds->capacity) {  /* no room; would write past end of array */
+    if (ds->count >= ds->capacity) {
         return;
     }
 
-    i = ds->count - 1;                 /* start at last element */
-    while (i >= 0 && ds->students[i].id > id) {  /* shift right until the position where new id fits is found */
-        ds->students[i + 1] = ds->students[i];  /* move element right to make a gap */
-        i--;
+    if (id <= 0) {
+        return;
     }
-    /* after loop: students[i].id <= id (or i is -1), so insert at i+1 */
-    ds->students[i + 1].id = id;
-    ds->students[i + 1].age = age;
-    ds->count++;
+
+    start = hash(id);
+    i = start;
+
+    do {
+        if (ds->table[i].id == 0) {
+            /* empty slot: store here */
+            ds->table[i].id = id;
+            ds->table[i].age = age;
+            ds->count++;
+            return;
+        }
+        if (ds->table[i].id == id) {
+            /* already present: update age */
+            ds->table[i].age = age;
+            return;
+        }
+        /* linear probing: next slot */
+        i = (i + 1) % TABLE_SIZE;
+    } while (i != start);
+
+    /* table full (should not happen if count < capacity and TABLE_SIZE >= capacity) */
 }
 
-/* searchID: Find student with given id using binary search. O(log n).
- * Compare with middle element; if id < mid search left half, else right half. Repeat until found or range empty. */
+/* searchID: Find student with given id. Direct hash then linear probe. O(1) average. */
 void searchID(DATASET *ds, int id)
 {
-    int low = 0;
-    int high;
-    int found = 0;
+    int i;
+    int start;
 
     printf("searchID: searching for student with ID %d\n", id);
 
@@ -92,38 +127,36 @@ void searchID(DATASET *ds, int id)
         return;
     }
 
-    high = ds->count - 1;
-
-    while (low <= high) {                          /* binary search: narrow range until found or empty */
-        int mid = (low + high) / 2;                 /* check middle index */
-        int midID = ds->students[mid].id;
-
-        if (midID == id) {
-            printf("searchID: found student (ID %d, Age %d)\n",
-                   ds->students[mid].id, ds->students[mid].age);
-            found = 1;
-            break;
-        } else if (midID < id) {
-            low = mid + 1;                          /* target id is larger, so it's in the right half */
-        } else {
-            high = mid - 1;                         /* target id is smaller, so it's in the left half */
-        }
-    }
-
-    if (!found) {
+    if (id <= 0) {
         printf("searchID: student with ID %d not found\n", id);
+        return;
     }
+
+    start = hash(id);
+    i = start;
+
+    do {
+        if (ds->table[i].id == 0) {
+            /* empty slot: not in table */
+            printf("searchID: student with ID %d not found\n", id);
+            return;
+        }
+        if (ds->table[i].id == id) {
+            printf("searchID: found student (ID %d, Age %d)\n",
+                   ds->table[i].id, ds->table[i].age);
+            return;
+        }
+        i = (i + 1) % TABLE_SIZE;
+    } while (i != start);
+
+    printf("searchID: student with ID %d not found\n", id);
 }
 
-/* deletion: Remove the one student with the given id (if present).
- * Binary search to find index, then shift all elements after it left by one. O(log n) + O(n) = O(n).
- * Index is needed to know where to shift from; same binary search as searchID but stores the index. */
+/* deletion: Remove the one student with the given id (if present). O(1) average. */
 void deletion(DATASET *ds, int id)
 {
-    int low = 0;
-    int high;
-    int index = -1;
     int i;
+    int start;
 
     if (ds == NULL) {
         return;
@@ -131,35 +164,30 @@ void deletion(DATASET *ds, int id)
 
     printf("deletion: attempting to delete student with ID %d\n", id);
 
-    high = ds->count - 1;
-
-    while (low <= high) {                          /* same binary search as searchID to find index */
-        int mid = (low + high) / 2;
-        int midID = ds->students[mid].id;
-
-        if (midID == id) {
-            index = mid;                            /* index needed so the shift loop knows where to start */
-            break;
-        } else if (midID < id) {
-            low = mid + 1;
-        } else {
-            high = mid - 1;
-        }
-    }
-
-    if (index == -1) {                             /* not found, nothing to delete */
+    if (id <= 0) {
         printf("deletion: student with ID %d not found, nothing deleted\n", id);
         return;
     }
 
-    printf("deletion: deleting student (ID %d, Age %d)\n",
-           ds->students[index].id, ds->students[index].age);
+    start = hash(id);
+    i = start;
 
-    for (i = index; i < ds->count - 1; i++) {
-        ds->students[i] = ds->students[i + 1];    /* shift left: each element takes the place of the next */
-    }
-    /* after loop: the slot at index is filled, and the old last slot is duplicate; decrement count to "remove" it */
-    ds->count--;
+    do {
+        if (ds->table[i].id == 0) {
+            printf("deletion: student with ID %d not found, nothing deleted\n", id);
+            return;
+        }
+        if (ds->table[i].id == id) {
+            printf("deletion: deleting student (ID %d, Age %d)\n",
+                   ds->table[i].id, ds->table[i].age);
+            ds->table[i].id = 0;
+            ds->table[i].age = 0;
+            ds->count--;
+            printf("deletion: student with ID %d has been deleted\n", id);
+            return;
+        }
+        i = (i + 1) % TABLE_SIZE;
+    } while (i != start);
 
-    printf("deletion: student with ID %d has been deleted\n", id);
+    printf("deletion: student with ID %d not found, nothing deleted\n", id);
 }

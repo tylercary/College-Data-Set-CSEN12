@@ -1,6 +1,6 @@
 /* college.c - Application 2 (search by ID)
- * Driver: create data set, insert 1000 random students (array stays sorted by ID),
- * one search by ID, one deletion by ID, then destroy. Per assignment spec.
+ * Author: Tyler Cary
+ * Driver: create data set (hash table), insert 1000 students, search by ID, deletion by ID, destroy. Per spec.
  */
 
 #include <stdio.h>
@@ -37,7 +37,7 @@ int main(void)
         return 1;
     }
 
-    /* Same ID rule as App1: first 1 or 2, then prev + 1 or 2. insertion() keeps array sorted by ID. */
+    /* Same ID rule: first 1 or 2, then prev + 1 or 2. insertion() stores in hash table. */
     currentID = randomOneOrTwo();
     for (i = 0; i < numberOfStudents; i++) {
         int age = (rand() % 13) + 18;
