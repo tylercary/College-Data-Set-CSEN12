@@ -31,46 +31,46 @@ DATASET *createDataSet(int maxStudents)
 {
     int i;
 
-    DATASET *ds = (DATASET *)malloc(sizeof(DATASET));
+    DATASET *ds = (DATASET *)malloc(sizeof(DATASET));  /* allocate the data set struct */
     if (ds == NULL) {
-        return NULL;
+        return NULL;                                    /* allocation failed */
     }
 
-    ds->count = 0;
-    ds->capacity = maxStudents;
+    ds->count = 0;                                      /* no students yet */
+    ds->capacity = maxStudents;                          /* set max capacity */
 
-    ds->table = (STUDENT *)malloc(sizeof(STUDENT) * TABLE_SIZE);
+    ds->table = (STUDENT *)malloc(sizeof(STUDENT) * TABLE_SIZE);  /* allocate the hash table array */
     if (ds->table == NULL) {
-        free(ds);
+        free(ds);                                       /* clean up if table allocation failed */
         return NULL;
     }
 
     /* Mark all slots empty (id = 0). */
     for (i = 0; i < TABLE_SIZE; i++) {
-        ds->table[i].id = 0;
+        ds->table[i].id = 0;                            /* 0 means this slot is empty */
         ds->table[i].age = 0;
     }
 
-    return ds;
+    return ds;                                           /* return the new data set */
 }
 
 /* destroyDataSet: Free table then struct. O(1). */
 void destroyDataSet(DATASET *ds)
 {
     if (ds != NULL) {
-        free(ds->table);
-        free(ds);
+        free(ds->table);                                /* free the hash table array */
+        free(ds);                                       /* free the struct itself */
     }
 }
 
 /* Hash function: direct addressing. h(k) = k % TABLE_SIZE. */
 static int hash(int id)
 {
-    int h = id % TABLE_SIZE;
+    int h = id % TABLE_SIZE;                            /* compute index using modulo */
     if (h < 0) {
-        h += TABLE_SIZE;
+        h += TABLE_SIZE;                                /* handle negative result */
     }
-    return h;
+    return h;                                           /* return the hash index */
 }
 
 /* insertion: Add (id, age) to the hash table. Linear probing if collision. O(1) average. */
@@ -80,26 +80,26 @@ void insertion(DATASET *ds, int id, int age)
     int start;
 
     if (ds == NULL) {
-        return;
+        return;                                         /* nothing to insert into */
     }
 
     if (ds->count >= ds->capacity) {
-        return;
+        return;                                         /* table is full */
     }
 
     if (id <= 0) {
-        return;
+        return;                                         /* invalid id */
     }
 
-    start = hash(id);
+    start = hash(id);                                   /* get the starting index */
     i = start;
 
     do {
         if (ds->table[i].id == 0) {
             /* empty slot: store here */
-            ds->table[i].id = id;
-            ds->table[i].age = age;
-            ds->count++;
+            ds->table[i].id = id;                       /* save the student id */
+            ds->table[i].age = age;                     /* save the student age */
+            ds->count++;                                /* increment student count */
             return;
         }
         if (ds->table[i].id == id) {
@@ -108,8 +108,8 @@ void insertion(DATASET *ds, int id, int age)
             return;
         }
         /* linear probing: next slot */
-        i = (i + 1) % TABLE_SIZE;
-    } while (i != start);
+        i = (i + 1) % TABLE_SIZE;                      /* wrap around to beginning if needed */
+    } while (i != start);                               /* stop if we loop back to start */
 
     /* table full (should not happen if count < capacity and TABLE_SIZE >= capacity) */
 }
@@ -124,30 +124,31 @@ void searchID(DATASET *ds, int id)
 
     if (ds == NULL) {
         printf("searchID: data set is NULL\n");
-        return;
+        return;                                         /* nothing to search */
     }
 
     if (id <= 0) {
         printf("searchID: student with ID %d not found\n", id);
-        return;
+        return;                                         /* invalid id */
     }
 
-    start = hash(id);
+    start = hash(id);                                   /* hash to get starting index */
     i = start;
 
     do {
         if (ds->table[i].id == 0) {
-            /* empty slot: not in table */
+            /* empty slot means the student is not in the table */
             printf("searchID: student with ID %d not found\n", id);
             return;
         }
         if (ds->table[i].id == id) {
+            /* found the matching student */
             printf("searchID: found student (ID %d, Age %d)\n",
                    ds->table[i].id, ds->table[i].age);
             return;
         }
-        i = (i + 1) % TABLE_SIZE;
-    } while (i != start);
+        i = (i + 1) % TABLE_SIZE;                      /* linear probe to next slot */
+    } while (i != start);                               /* stop if we checked every slot */
 
     printf("searchID: student with ID %d not found\n", id);
 }
@@ -159,35 +160,37 @@ void deletion(DATASET *ds, int id)
     int start;
 
     if (ds == NULL) {
-        return;
+        return;                                         /* nothing to delete from */
     }
 
     printf("deletion: attempting to delete student with ID %d\n", id);
 
     if (id <= 0) {
         printf("deletion: student with ID %d not found, nothing deleted\n", id);
-        return;
+        return;                                         /* invalid id */
     }
 
-    start = hash(id);
+    start = hash(id);                                   /* hash to get starting index */
     i = start;
 
     do {
         if (ds->table[i].id == 0) {
+            /* empty slot means the student is not in the table */
             printf("deletion: student with ID %d not found, nothing deleted\n", id);
             return;
         }
         if (ds->table[i].id == id) {
+            /* found the student to delete */
             printf("deletion: deleting student (ID %d, Age %d)\n",
                    ds->table[i].id, ds->table[i].age);
-            ds->table[i].id = 0;
-            ds->table[i].age = 0;
-            ds->count--;
+            ds->table[i].id = 0;                        /* clear the id to mark slot empty */
+            ds->table[i].age = 0;                       /* clear the age */
+            ds->count--;                                /* decrement student count */
             printf("deletion: student with ID %d has been deleted\n", id);
             return;
         }
-        i = (i + 1) % TABLE_SIZE;
-    } while (i != start);
+        i = (i + 1) % TABLE_SIZE;                      /* linear probe to next slot */
+    } while (i != start);                               /* stop if we checked every slot */
 
     printf("deletion: student with ID %d not found, nothing deleted\n", id);
 }
